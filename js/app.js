@@ -19,9 +19,8 @@ const mobileNavLinks = document.getElementById('mobile-nav-links');
 const toastContainer = document.getElementById('toast-container');
 
 // --- INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', () => {
-    initApp();
-});
+// type="module" scripts are deferred, so DOM is already parsed when this runs
+initApp();
 
 async function initApp() {
     // Check if user is logged in
