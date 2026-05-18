@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PS23 | P2P Lending & Recovery System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                        success: '#10b981',
+                        danger: '#f43f5e',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-900 text-slate-50 antialiased overflow-x-hidden min-h-screen flex flex-col">
+    
+    <!-- Main App Container (Hidden initially until JS decides what to show) -->
+    <div id="app-container" class="flex-1 flex flex-col md:flex-row hidden">
+        
+        <!-- Sidebar Navigation (Hidden on Auth View) -->
+        <aside id="sidebar" class="w-full md:w-64 glass-panel border-r border-slate-700/50 hidden md:flex flex-col h-screen sticky top-0">
+            <div class="p-6 flex items-center gap-3 border-b border-slate-700/50">
+                <i data-lucide="zap" class="text-emerald-400"></i>
+                <h1 class="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">PS23.Lend</h1>
+            </div>
+            
+            <div class="p-4 flex-1">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-2">Menu</p>
+                <nav class="space-y-2" id="nav-links">
+                    <!-- Nav links injected by JS based on role -->
+                </nav>
+            </div>
+            
+            <div class="p-4 border-t border-slate-700/50">
+                <div class="flex items-center gap-3 mb-4 px-2">
+                    <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold" id="user-avatar">U</div>
+                    <div>
+                        <p class="text-sm font-medium" id="user-name-display">User Name</p>
+                        <p class="text-xs text-slate-400 capitalize" id="user-role-display">Role</p>
+                    </div>
+                </div>
+                <button id="logout-btn" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col min-h-screen">
+            <!-- Mobile Header (Visible only on mobile when logged in) -->
+            <header id="mobile-header" class="md:hidden glass-panel border-b border-slate-700/50 p-4 flex items-center justify-between sticky top-0 z-40 hidden">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="zap" class="text-emerald-400 w-5 h-5"></i>
+                    <h1 class="font-bold text-lg">PS23.Lend</h1>
+                </div>
+                <button id="mobile-menu-btn" class="text-slate-300">
+                    <i data-lucide="menu"></i>
+                </button>
+            </header>
+            
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobile-nav" class="md:hidden glass-panel border-b border-slate-700/50 p-4 hidden absolute top-[65px] left-0 right-0 z-30">
+                <nav class="space-y-2" id="mobile-nav-links"></nav>
+            </div>
+
+            <!-- View Container -->
+            <div id="view-container" class="flex-1 p-4 md:p-8 overflow-y-auto">
+                <!-- Views injected here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
+
+    <!-- ========================================== -->
+    <!-- TEMPLATES (Hidden, cloned by JS router)  -->
+    <!-- ========================================== -->
+
+    <!-- 1. AUTH VIEW -->
+    <template id="tpl-auth">
+        <div class="min-h-screen flex items-center justify-center p-4 w-full absolute inset-0 bg-slate-900 z-50">
+            <div class="w-full max-w-md glass-panel p-8 rounded-2xl animate-fade-in relative overflow-hidden">
+                <!-- Decorative background elements -->
+                <div class="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl"></div>
+                
+                <div class="text-center mb-8 relative z-10">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-slate-800/50 border border-slate-700 mb-4 shadow-lg shadow-emerald-500/10">
+                        <i data-lucide="zap" class="w-8 h-8 text-emerald-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold">Welcome to PS23</h2>
+                    <p class="text-slate-400 text-sm mt-2">Peer-to-Peer Lending & Recovery</p>
+                </div>
+
+                <form id="auth-form" class="space-y-4 relative z-10">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Full Name</label>
+                        <input type="text" id="auth-name" required class="w-full px-4 py-2.5 rounded-lg glass-input text-sm placeholder-slate-500" placeholder="John Doe">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Email Address</label>
+                        <input type="email" id="auth-email" required class="w-full px-4 py-2.5 rounded-lg glass-input text-sm placeholder-slate-500" placeholder="john@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Select Role</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="role" value="borrower" class="peer sr-only" checked>
+                                <div class="p-3 rounded-lg border border-slate-700 text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 transition-all">
+                                    <i data-lucide="user" class="w-5 h-5 mx-auto mb-1 text-slate-300 peer-checked:text-emerald-400"></i>
+                                    <span class="text-sm font-medium">Borrower</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="role" value="lender" class="peer sr-only">
+                                <div class="p-3 rounded-lg border border-slate-700 text-center peer-checked:border-indigo-500 peer-checked:bg-indigo-500/10 transition-all">
+                                    <i data-lucide="briefcase" class="w-5 h-5 mx-auto mb-1 text-slate-300 peer-checked:text-indigo-400"></i>
+                                    <span class="text-sm font-medium">Lender</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white rounded-lg font-medium shadow-lg shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5 mt-6">
+                        Enter Platform
+                    </button>
+                    <p class="text-xs text-center text-slate-500 mt-4">For demo purposes, entering details acts as login/register.</p>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <!-- 2. DASHBOARD VIEW (Borrower & Lender) -->
+    <template id="tpl-dashboard">
+        <div class="animate-fade-in space-y-6">
+            <header class="mb-8">
+                <h2 class="text-2xl font-bold">Dashboard</h2>
+                <p class="text-slate-400 text-sm">Overview of your account and activities.</p>
+            </header>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="glass-panel p-6 rounded-xl border-t-4 border-indigo-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm text-slate-400 font-medium">Wallet Balance</p>
+                            <h3 class="text-3xl font-bold mt-2 font-mono" id="dash-wallet">$0.00</h3>
+                        </div>
+                        <div class="p-2 bg-indigo-500/10 rounded-lg"><i data-lucide="wallet" class="text-indigo-400"></i></div>
+                    </div>
+                </div>
+                
+                <div class="glass-panel p-6 rounded-xl border-t-4 border-emerald-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm text-slate-400 font-medium" id="dash-metric-label">Active Loans</p>
+                            <h3 class="text-3xl font-bold mt-2" id="dash-active-loans">0</h3>
+                        </div>
+                        <div class="p-2 bg-emerald-500/10 rounded-lg"><i data-lucide="activity" class="text-emerald-400"></i></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-xl border-t-4 border-amber-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm text-slate-400 font-medium" id="dash-score-label">Credit Health Score</p>
+                            <h3 class="text-3xl font-bold mt-2 text-amber-400" id="dash-score">720</h3>
+                        </div>
+                        <div class="p-2 bg-amber-500/10 rounded-lg"><i data-lucide="shield" class="text-amber-400"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                <!-- Activity Feed -->
+                <div class="lg:col-span-2 glass-panel p-6 rounded-xl">
+                    <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
+                    <div class="space-y-4" id="dash-activity-list">
+                        <!-- Activity injected here -->
+                        <div class="text-center py-8 text-slate-500 text-sm">No recent activity.</div>
+                    </div>
+                </div>
+
+                <!-- Chart Area -->
+                <div class="glass-panel p-6 rounded-xl flex flex-col">
+                    <h3 class="text-lg font-semibold mb-4" id="dash-chart-title">Progress</h3>
+                    <div class="flex-1 flex items-center justify-center min-h-[200px]">
+                        <canvas id="dashboardChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 3. MARKETPLACE VIEW (Lender Only) -->
+    <template id="tpl-marketplace">
+        <div class="animate-fade-in space-y-6">
+            <header class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold">Investment Marketplace</h2>
+                    <p class="text-slate-400 text-sm">Browse and fund AI-vetted loan requests.</p>
+                </div>
+                <div class="glass-panel px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
+                    <select class="bg-transparent text-sm focus:outline-none" id="market-filter">
+                        <option value="all">All Risk Tiers</option>
+                        <option value="Low">Low Risk</option>
+                        <option value="Medium">Medium Risk</option>
+                        <option value="High">High Risk</option>
+                    </select>
+                </div>
+            </header>
+
+            <!-- Chart for Lenders -->
+            <div class="glass-panel p-4 rounded-xl mb-6 hidden md:block">
+                <h3 class="text-sm font-semibold mb-2 text-slate-300">Risk vs Suggested ROI Scatter Analysis</h3>
+                <div class="h-48 w-full">
+                    <canvas id="scatterChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="marketplace-list">
+                <!-- Loan cards injected here -->
+            </div>
+        </div>
+    </template>
+
+    <!-- 4. LOAN APPLICATION VIEW (Borrower Only) -->
+    <template id="tpl-loan-request">
+        <div class="animate-fade-in space-y-6 max-w-4xl mx-auto">
+            <header class="mb-6">
+                <h2 class="text-2xl font-bold">Request a Loan</h2>
+                <p class="text-slate-400 text-sm">Our AI will assess your profile and suggest an interest rate.</p>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                <!-- Form -->
+                <div class="md:col-span-3 glass-panel p-6 rounded-xl">
+                    <form id="loan-request-form" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Amount Required ($)</label>
+                                <input type="number" id="lr-amount" required min="100" max="50000" class="w-full px-4 py-2 rounded-lg glass-input text-sm" placeholder="5000">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Tenure (Months)</label>
+                                <select id="lr-tenure" class="w-full px-4 py-2 rounded-lg glass-input text-sm">
+                                    <option value="6">6 Months</option>
+                                    <option value="12">12 Months</option>
+                                    <option value="24">24 Months</option>
+                                    <option value="36">36 Months</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Purpose of Loan</label>
+                            <input type="text" id="lr-purpose" required class="w-full px-4 py-2 rounded-lg glass-input text-sm" placeholder="e.g. Home Renovation, Business">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Monthly Income ($)</label>
+                                <input type="number" id="lr-income" required class="w-full px-4 py-2 rounded-lg glass-input text-sm" placeholder="4000">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Existing Debts ($)</label>
+                                <input type="number" id="lr-debts" required class="w-full px-4 py-2 rounded-lg glass-input text-sm" placeholder="500" value="0">
+                            </div>
+                        </div>
+                        <button type="button" id="btn-analyze-risk" class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 mt-4">
+                            <i data-lucide="cpu" class="w-4 h-4 text-indigo-400"></i> Run AI Assessment
+                        </button>
+                    </form>
+                </div>
+
+                <!-- AI Assessment Report (Hidden until analyzed) -->
+                <div class="md:col-span-2 glass-panel p-6 rounded-xl border border-slate-700 relative overflow-hidden hidden" id="ai-report-panel">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-emerald-500"></div>
+                    <h3 class="text-sm font-semibold text-slate-300 flex items-center gap-2 mb-4">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i> AI Risk Report
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center pb-2 border-b border-slate-700/50">
+                            <span class="text-sm text-slate-400">Risk Tier</span>
+                            <span class="font-bold px-2 py-1 rounded text-xs" id="report-tier">--</span>
+                        </div>
+                        <div class="flex justify-between items-center pb-2 border-b border-slate-700/50">
+                            <span class="text-sm text-slate-400">Default Probability</span>
+                            <span class="font-bold text-sm" id="report-prob">--%</span>
+                        </div>
+                        <div class="flex justify-between items-center pb-2 border-b border-slate-700/50">
+                            <span class="text-sm text-slate-400">Suggested Rate</span>
+                            <span class="font-bold text-indigo-400 text-lg" id="report-rate">--%</span>
+                        </div>
+                        
+                        <div class="pt-4">
+                            <button type="button" id="btn-submit-loan" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-emerald-500/20">
+                                Confirm & Post to Marketplace
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 5. RECOVERY CONSOLE VIEW -->
+    <template id="tpl-recovery">
+        <div class="animate-fade-in space-y-6">
+            <header class="mb-6">
+                <h2 class="text-2xl font-bold">Repayment & Recovery</h2>
+                <p class="text-slate-400 text-sm">Manage EMIs, view AI nudges, and access restructuring.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Active Loans / EMIs Ledger -->
+                <div class="lg:col-span-2 glass-panel p-6 rounded-xl">
+                    <h3 class="text-lg font-semibold mb-4">Upcoming Repayments</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-400 uppercase bg-slate-800/50">
+                                <tr>
+                                    <th class="px-4 py-3 rounded-tl-lg">Loan ID</th>
+                                    <th class="px-4 py-3">Amount Due</th>
+                                    <th class="px-4 py-3">Due Date</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3 rounded-tr-lg">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="repayment-ledger-body">
+                                <!-- Ledger rows injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- AI Smart Nudges & Restructuring -->
+                <div class="space-y-6">
+                    <div class="glass-panel p-6 rounded-xl border-t-4 border-indigo-500 relative overflow-hidden">
+                        <i data-lucide="bot" class="absolute -bottom-4 -right-4 w-24 h-24 text-indigo-500/10"></i>
+                        <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 relative z-10">
+                            <i data-lucide="message-square" class="w-5 h-5 text-indigo-400"></i> AI Smart Nudges
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4 relative z-10">Predictive behavioral alerts sent to users.</p>
+                        
+                        <div class="space-y-3 relative z-10" id="ai-nudges-container">
+                            <!-- Nudges injected here -->
+                            <div class="text-xs text-slate-500 text-center py-4">No critical nudges currently.</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-xl border border-rose-500/30 bg-rose-500/5">
+                        <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-rose-400">
+                            <i data-lucide="life-buoy" class="w-5 h-5"></i> AI Restructuring
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4">Facing financial difficulty? AI can restructure your loan to lower EMIs and prevent default.</p>
+                        <button id="btn-restructure" class="w-full py-2 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            Analyze Eligibility
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Scripts -->
+    <script type="module" src="js/store.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
