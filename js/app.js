@@ -29,7 +29,7 @@ async function initApp() {
         currentState.user = savedUser;
         navigateTo('dashboard');
     } else {
-        renderView('auth');
+        navigateTo('auth');
     }
 
     setupGlobalListeners();
