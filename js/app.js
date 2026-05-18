@@ -59,6 +59,7 @@ function navigateTo(viewId) {
         updateSidebarInfo();
         generateNavLinks();
     } else {
+        appContainer.classList.remove('hidden');
         sidebar.classList.add('hidden');
         mobileHeader.classList.add('hidden');
     }
