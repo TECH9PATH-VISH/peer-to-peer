@@ -1,4 +1,4 @@
-import { db } from '../config/firebase-config.js';
+import { db, auth } from '../config/firebase-config.js';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { fundLoan } from '../transactions/payment.js';
 
@@ -45,7 +45,12 @@ export async function loadMarketplace() {
         const loanId = e.target.getAttribute('data-id');
         const borrowerId = e.target.getAttribute('data-borrower');
         const amount = parseFloat(e.target.getAttribute('data-amount'));
-        const lenderId = "CURRENT_LENDER_UID"; // Mocked, replace with auth.currentUser.uid in real app
+        
+        const lenderId = auth.currentUser ? auth.currentUser.uid : null;
+        if (!lenderId) {
+          alert('You must be logged in to fund a loan.');
+          return;
+        }
         
         await handleFunding(loanId, lenderId, borrowerId, amount);
       });
