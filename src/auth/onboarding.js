@@ -103,7 +103,9 @@ function showOnboardingForm(user) {
 }
 
 export function showAuthView() {
-  document.getElementById('app-container').classList.add('hidden');
+  document.getElementById('app-container').classList.remove('hidden');
+  document.getElementById('sidebar')?.classList.add('hidden');
+  document.getElementById('mobile-header')?.classList.add('hidden');
   
   const viewContainer = document.getElementById('view-container');
   viewContainer.innerHTML = '';
@@ -111,7 +113,7 @@ export function showAuthView() {
   const tpl = document.getElementById('tpl-auth');
   if (tpl) {
     viewContainer.appendChild(tpl.content.cloneNode(true));
-    lucide.createIcons();
+    if (window.lucide) window.lucide.createIcons();
 
     const form = document.getElementById('auth-form');
     form.addEventListener('submit', async (e) => {
