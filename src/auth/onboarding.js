@@ -53,6 +53,13 @@ export async function signUpUser(email, password) {
 export async function completeUserProfile(user, name, phone, role) {
   try {
     const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      console.log('Profile already exists. Skipping creation.');
+      routeToDashboard(userSnap.data().role || role);
+      return;
+    }
     
     // Initial values
     const profileData = {
@@ -61,7 +68,7 @@ export async function completeUserProfile(user, name, phone, role) {
       phone,
       email: user.email,
       role, // 'borrower', 'lender', 'agent'
-      walletBalance: 0
+      walletBalance: role === 'lender' ? 10000 : 0
     };
 
     // If borrower, give baseline trust score
