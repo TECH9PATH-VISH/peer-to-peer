@@ -1,6 +1,7 @@
 import '../styles.css';
 import { initializeAuth } from './auth/onboarding.js';
 import { loadMarketplace } from './marketplace/marketplace.js';
+import { initLoanRequest } from './transactions/loan-request.js';
 import { auth } from './config/firebase-config.js';
 import { signOut } from 'firebase/auth';
 
@@ -154,6 +155,7 @@ function renderView(templateId) {
   // Initialize view specific logic
   if (templateId === 'tpl-marketplace') {
     loadMarketplace();
+  } else if (templateId === 'tpl-loan-request') {
+    initLoanRequest();
   }
-  // Future: Add initialization logic for dashboard, loan requests, etc.
 }
