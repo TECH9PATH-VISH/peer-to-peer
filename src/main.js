@@ -2,6 +2,8 @@ import '../styles.css';
 import { initializeAuth } from './auth/onboarding.js';
 import { loadMarketplace } from './marketplace/marketplace.js';
 import { initLoanRequest } from './transactions/loan-request.js';
+import { initDashboard } from './dashboard/dashboard.js';
+import { initRecovery } from './transactions/recovery.js';
 import { auth } from './config/firebase-config.js';
 import { signOut } from 'firebase/auth';
 
@@ -157,5 +159,9 @@ function renderView(templateId) {
     loadMarketplace();
   } else if (templateId === 'tpl-loan-request') {
     initLoanRequest();
+  } else if (templateId === 'tpl-dashboard') {
+    initDashboard();
+  } else if (templateId === 'tpl-recovery') {
+    initRecovery();
   }
 }
